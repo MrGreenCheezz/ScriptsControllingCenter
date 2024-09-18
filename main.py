@@ -1,13 +1,21 @@
 import tkinter as tk
 from ProcessClass import ControllingProcess  
 
-ImapScriptPath = "./im_mail_checker/index.js"
-RemedySciptPath = "./rm_sniffer/main.py"
-AnnouncerScriptPath = "./expire_date_checker/main.py"
+ImapScriptPath = "./imapTest/index.js"
+RemedySciptPath = "./pythonCbr/main.py"
+AnnouncerScriptPath = "./ExpireAnouncer/main.py"
+WebDispatcherScriptPath = "./TestWebDispatcher/index.js"
+CertCheckerPath = './certChecker/main.py'
+ImWebServer = './TestImApp/index.js'
+StpkWebServer = './StpkWebServer/index.js'
+
+def toggle_status(block_num):
+    statuses[block_num] = not statuses[block_num]
+    update_ui()
 
 def update_ui():
     for i in range(len(blocks)):
-        status_labels[i].config(text="Status: " + ("Active" if statuses[i] else "Not active"), fg=("green" if statuses[i] else "red"))
+        status_labels[i].config(text="Статус: " + ("Активен" if statuses[i] else "Неактивен"), fg=("green" if statuses[i] else "red"))
         start_buttons[i].config(state=("disabled" if statuses[i] else "normal"))
         stop_buttons[i].config(state=("normal" if statuses[i] else "disabled"))
 
@@ -17,10 +25,11 @@ def update_statuses():
             statuses[i] = True
         else:
             statuses[i] = False
-    update_ui()  
+            ScriptsProccesses[block].start(block)
+    update_ui()  # Обновляем UI один раз после проверки всех статусов
 
 def start_process(block_num):
-    ScriptsProccesses[blocks[block_num]].start()
+    ScriptsProccesses[blocks[block_num]].start(blocks[block_num])
     update_statuses()
 
 def stop_process(block_num):
@@ -29,16 +38,16 @@ def stop_process(block_num):
 
 def periodic_check():
     update_statuses()
-    root.after(2000, periodic_check) 
+    root.after(2000, periodic_check)  # Планируем следующую проверку через 2000 мс (2 секунды)
 
 root = tk.Tk()
-root.title("Script manager")
+root.title("Статусы блоков")
 
-root.geometry("500x400")
+root.geometry("500x800")
 root.resizable(False, False)
 
-blocks = ["IM service", "Remedy service", "Announcer service"]
-statuses = [False, False, False]
+blocks = ["IM service","Web dispatcher", "Remedy service", "Announcer service", "Cert checker","ImWebServer", "StpkWebServer"]
+statuses = [False,False, False, False, False, False, False]
 
 status_labels = []
 start_buttons = []
@@ -46,8 +55,12 @@ stop_buttons = []
 
 ScriptsProccesses = {
     "IM service": ControllingProcess(ImapScriptPath, "Node"), 
+    "Web dispatcher": ControllingProcess(WebDispatcherScriptPath, "Node"),
     "Remedy service": ControllingProcess(RemedySciptPath, "Python"), 
-    "Announcer service": ControllingProcess(AnnouncerScriptPath, "Python")
+    "Announcer service": ControllingProcess(AnnouncerScriptPath, "Python"),
+    "Cert checker": ControllingProcess(CertCheckerPath, "Python"),
+    "ImWebServer": ControllingProcess(ImWebServer, "Node"),
+    "StpkWebServer": ControllingProcess(StpkWebServer, "Node")  
 }
 
 for i, block in enumerate(blocks):
@@ -71,6 +84,6 @@ for i, block in enumerate(blocks):
     stop_buttons.append(stop_button)
 
 update_ui()
-periodic_check()  
+periodic_check()  # Инициализируем периодическую проверку статусов
 
 root.mainloop()
