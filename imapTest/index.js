@@ -23,15 +23,11 @@ const pool = new Pool({
 module.exports = pool;
 
 function parseDate(dateStr) {
-  // Разделение даты и времени
   const parts = dateStr.split(' ');
   const dateParts = parts[0].split('.');
   const time = parts[1];
-
-  // Перестановка даты в формат YYYY-MM-DD и объединение с временем
   const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${time}`;
 
-  // Создание объекта Date
   return new Date(formattedDate);
 }
 
@@ -40,10 +36,9 @@ async function AddToDB(date, text, expireTime, num) {
     INSERT INTO im (date, text, expire_time, num)
     VALUES ($1, $2, $3, $4);
   `;
-
   try {
     const res = await pool.query(query, [date, text, expireTime, num]);
-    console.log(res.rows[0]);  // Выводит вставленную строку
+    console.log(res.rows[0]);  
   } catch (err) {
     console.error('Ошибка при добавлении данных в таблицу im:', err);
   }
@@ -53,10 +48,9 @@ async function CheckDB(number){
   const query = `
     SELECT * FROM im WHERE num = $1 ORDER BY date DESC LIMIT 1;
   `;
-
   try {
     const res = await pool.query(query, [number]);
-    console.log(res.rows[0]);  // Выводит вставленную строку
+    console.log(res.rows[0]); 
     if(res.rows[0] == null){
       return 0;
     }
@@ -66,9 +60,7 @@ async function CheckDB(number){
   } catch (err) {
     console.error('Ошибка поиска записи.', err);
   }
-
 }
-
 
 const inspect = require('util').inspect;
 let myInbox = { value: null };
@@ -93,7 +85,6 @@ async function processMail(msg, seqno) {
       buffer += chunk.toString('utf8');
     });
     stream.once('end', function () {
-      // Check if the subject matches the pattern
       const subject = Imap.parseHeader(buffer).subject[0];
       const pattern = /Вашей группе предложена заявка № IM-CL-(.*)/;
       const match = subject.match(pattern);
@@ -101,15 +92,12 @@ async function processMail(msg, seqno) {
       if (match) {
         const nextString = match[1];
         console.log('Next string after matching fragment:', nextString);
-        // Write text from inside the mail to console
         simpleParser(buffer, async (err, mail) => {
           const descriptionPattern = /Краткое описание:(.*)/;
           const dateExpirePattern = /время решения: (\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2})/;
-          //console.log(mail.text)
           let dateNew;
           const descriptionMatch = mail.text.match(descriptionPattern);
           const dateMatch = mail.text.match(dateExpirePattern);
-          //console.log(mail.text)
           if (dateMatch) {
             console.log(dateMatch[1]);
           }
@@ -125,59 +113,13 @@ async function processMail(msg, seqno) {
               console.log(new Date(dateMatch[1]).getTime() <= new Date().getTime())
               if(tmp != 0){
                 DoOnNewEmail(" Заявка с номером " + nextString + " и описанием: " + description + " \n" + "http://im.telecom.kz/inframanager/SD/Table" + " просрочена\n" + "\n Повторная заявка, ранее приходила:\n " + tmp);
-                //fetch('http://localhost:3000/run?func=GetTest&elementName=№&elementText=' + nextString);
               }
               else{
                 DoOnNewEmail(" Заявка с номером " + nextString + " и описанием: " + description + " \n" + "http://im.telecom.kz/inframanager/SD/Table" + " просрочена");
               }
             }
             else{    
-              // let tmp = await CheckDB(nextString); 
-              // if(tmp != 0){
-              //   DoOnNewEmail(" Заявка с номером " + nextString + " и описанием: " + description + " \n" + "http://im.telecom.kz/inframanager/SD/Table" + "\n Повторная заявка, ранее приходила: \n" +tmp);
-              //   //fetch('http://localhost:3000/run?func=GetTest&elementName=№&elementText=' + nextString);
-              //   setTimeout(() => {
-              //     fetch('http://localhost:3000/run?func=FindRowsWithElement&elementName=№&elementText=' + nextString).then((response) => { 
-              //       console.log('http://localhost:3000/run?func=FindRowsWithElement&elementName=№elementText=' + nextString);
-              //       console.log(response)
-              //       //if(!response.ok) throw new Error('Ошибка при запросе к серверу');
-              //       return response.json();
-              //     }).then((data) => {
-              //       if(isEmptyObject(data)){
-
-              //       }else{
-              //         if(data.length > 0){
-              //           DoOnNewEmail(" Заявка с номером " + nextString + " и описанием: " + description + " \n" + "До сих пор не принята, осталось 7 минут.");
-              //           fetch('http://localhost:3000/run?func=GetTest&elementName=№&elementText=' + nextString);
-              //           DoOnNewEmail(" Заявка автоматически назначена.");
-
-              //         }
-              //       }
-              //     });
-              //   }, 30000);
-              // }else{
-              //   setTimeout(() => {
-              //     fetch('http://localhost:3000/run?func=FindRowsWithElement&elementName=№&elementText=' + nextString).then((response) => { 
-              //       console.log('http://localhost:3000/run?func=FindRowsWithElement&elementName=№elementText=' + nextString);
-              //       console.log(response)
-              //       //if(!response.ok) throw new Error('Ошибка при запросе к серверу');
-              //       return response.json();
-              //     }).then((data) => {
-              //       if(isEmptyObject(data)){
-
-              //       }else{
-              //         if(data.length > 0){
-              //           DoOnNewEmail(" Заявка с номером " + nextString + " и описанием: " + description + " \n" + "До сих пор не принята, осталось 7 минут.");
-              //           fetch('http://localhost:3000/run?func=GetTest&elementName=№&elementText=' + nextString);
-              //           DoOnNewEmail(" Заявка автоматически назначена.");
-              //         }
-                     
-              //       }
-              //     });
-              //   }, 30000);
-              //   DoOnNewEmail(" Заявка с номером " + nextString + " и описанием: " + description + " \n" + "http://im.telecom.kz/inframanager/SD/Table");
-              //   //fetch('http://localhost:3000/run?func=GetTest&elementName=№&elementText=' + nextString);
-              // }
+              //Work with database, maybe later
             }         
             try {
               AddToDB(new Date().toLocaleString(), description, dateMatch[1], nextString);
@@ -204,7 +146,7 @@ function sendTelegramNotification(text) {
   const token = '*';
   const chatId = '-1002057022269';
   const currentTime = new Date();
-  const message = `Уведомление с IM: ${currentTime.toLocaleString()}`; // Ваше сообщение
+  const message = `Уведомление с IM: ${currentTime.toLocaleString()}`;
 
   notifier.notify({
     title: 'Пришла заявка в ИМ',
@@ -241,8 +183,6 @@ imap.once('ready', function () {
       }
     }
     )
-
-
   });
 });
 
