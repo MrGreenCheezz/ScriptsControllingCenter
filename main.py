@@ -43,10 +43,10 @@ def periodic_check():
 root = tk.Tk()
 root.title("Статусы блоков")
 
-root.geometry("500x800")
+root.geometry("500x200")
 root.resizable(False, False)
 
-blocks = ["IM service","Web dispatcher", "Remedy service", "Announcer service", "Cert checker","ImWebServer", "StpkWebServer"]
+blocks = ["IM service", "Remedy service"]
 statuses = [False,False, False, False, False, False, False]
 
 status_labels = []
